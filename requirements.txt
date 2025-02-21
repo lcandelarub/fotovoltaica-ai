@@ -2,4 +2,4 @@ streamlit
 scikit-learn
 numpy
 PyPDF2
-openai>=1.0.0
+openai>=1.2.0
