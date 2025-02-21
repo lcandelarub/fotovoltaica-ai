@@ -60,7 +60,8 @@ if documents_text:
         best_match, confidence, best_text = results[0]
 
         # Usar la API actualizada de OpenAI
-        client = openai.Client(api_key="TU_API_KEY_AQUI")  # Reemplázala con tu clave de OpenAI
+        import os
+client = openai.Client(api_key=os.getenv("OPENAI_API_KEY"))
 
         prompt = f"""
         Basado en el siguiente contenido extraído de un documento de fotovoltaica, responde la pregunta de forma clara y estructurada.
