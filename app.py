@@ -62,7 +62,15 @@ if documents_text:
         # Usar GPT-4 para generar una respuesta basada en el texto extraído
         openai.api_key = "TU_API_KEY_AQUI"  # Reemplázala con tu clave de OpenAI
 
-        prompt = f"Basado en el siguiente contenido extraído de un documento de fotovoltaica, responde la pregunta de forma clara y estructurada.
+        prompt = f"""Basado en el siguiente contenido extraído de un documento de fotovoltaica, responde la pregunta de forma clara y estructurada.
+
+        Pregunta: {query}
+
+        Texto del documento:
+        {best_text[:2000]}
+
+        Respuesta:
+        """
 
 Pregunta: {query}
 
