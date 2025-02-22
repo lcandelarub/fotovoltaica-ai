@@ -54,7 +54,7 @@ if query:
 
 Pregunta: {query}
 
-Respuesta:"
+Respuesta:""
 
         try:
             response = client.completions.create(
