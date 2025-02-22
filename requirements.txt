@@ -3,3 +3,5 @@ pdfplumber
 numpy
 PyPDF2
 streamlit
+chromadb
+tiktoken
