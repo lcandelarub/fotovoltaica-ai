@@ -48,7 +48,7 @@ if query:
     if results:
         # Construcción del prompt para OpenAI
         context = "\n\n".join([f"Documento: {doc}\nContenido: {content[:2000]}" for doc, content in results])  # Limitar contenido
-        prompt = f"Basado en los siguientes documentos sobre energía fotovoltaica, responde la pregunta de forma precisa y utilizando datos textuales exactos:
+        prompt = f"Basado en los siguientes documentos sobre energía fotovoltaica, responde la pregunta de forma precisa y utilizando datos textuales exactos:"
 
 {context}
 
