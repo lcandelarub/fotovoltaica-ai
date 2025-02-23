@@ -1,16 +1,15 @@
-import chromadb
 import PyPDF2
 import os
 import json
 import requests
-from openai import OpenAI
+import openai
 
 # --- CONFIGURAR LA API KEY DESDE SECRETS ---
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     raise RuntimeError("❌ ERROR: No se encontró la API Key de OpenAI. Configúrala en el entorno de ejecución.")
 
-client = OpenAI(api_key=api_key)
+client = openai
 
 # --- CONFIGURAR ARCHIVO DE MEMORIA ---
 knowledge_file = "knowledge.json"
@@ -31,17 +30,6 @@ def download_pdfs_from_github():
         else:
             print(f"⚠️ Advertencia: No se pudo descargar {pdf} desde GitHub.")
 
-def process_and_store_documents():
-    chroma_client = chromadb.PersistentClient(path="chroma_db")
-    collection = chroma_client.get_or_create_collection("documents")
-    
-    for file in os.listdir("documents"):
-        if file.endswith(".pdf"):
-            paragraphs = extract_text_from_pdf(os.path.join("documents", file))
-            for i, paragraph in enumerate(paragraphs):
-                doc_id = f"{file}_part_{i}"
-                collection.add(documents=[paragraph.strip()], ids=[doc_id])
-
 def extract_text_from_pdf(pdf_path):
     text = ""
     with open(pdf_path, "rb") as pdf_file:
@@ -51,6 +39,18 @@ def extract_text_from_pdf(pdf_path):
             if extracted_text:
                 text += extracted_text + "\n"
     return text.split("\n\n")  # Dividir el texto en párrafos
+
+def process_and_store_documents():
+    knowledge = {}
+    for file in os.listdir("documents"):
+        if file.endswith(".pdf"):
+            paragraphs = extract_text_from_pdf(os.path.join("documents", file))
+            for i, paragraph in enumerate(paragraphs):
+                key = f"{file}_part_{i}"
+                knowledge[key] = paragraph.strip()
+    
+    with open(knowledge_file, "w") as f:
+        json.dump(knowledge, f, indent=4)
 
 # --- DESCARGAR Y PROCESAR DOCUMENTOS AL INICIAR ---
 download_pdfs_from_github()
@@ -62,11 +62,10 @@ print("Haz preguntas y obtén respuestas basadas en documentos pre-cargados.")
 
 query = input("🔍 Escribe tu pregunta sobre fotovoltaica: ")
 if query:
-    chroma_client = chromadb.PersistentClient(path="chroma_db")
-    collection = chroma_client.get_or_create_collection("documents")
-    results = collection.query(query_texts=[query], n_results=5)
-    retrieved_text = "\n\n".join([doc for doc in results['documents'][0]])
+    with open(knowledge_file, "r") as f:
+        knowledge = json.load(f)
     
+    combined_text = "\n\n".join(knowledge.values())
     prompt = f"""
     Basado en el siguiente conocimiento almacenado sobre energía solar fotovoltaica,
     responde la pregunta de forma clara, estructurada y precisa.
@@ -74,13 +73,13 @@ if query:
     Pregunta: {query}
     
     Conocimiento disponible:
-    {retrieved_text[:2000]}
+    {combined_text[:2000]}
     
     Respuesta:
     """
     
     try:
-        response = client.chat.completions.create(
+        response = client.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "Eres un asistente experto en energía solar fotovoltaica."},
@@ -88,7 +87,7 @@ if query:
             ]
         )
         
-        generated_response = response.choices[0].message.content.strip()
+        generated_response = response["choices"][0]["message"]["content"].strip()
         if generated_response:
             print("💡 Respuesta generada por IA:")
             print(generated_response)
