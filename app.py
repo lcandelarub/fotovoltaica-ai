@@ -56,9 +56,7 @@ if question:
     # Generar respuesta con OpenAI
     prompt = (
         f"Basado en los siguientes documentos sobre energía fotovoltaica, "
-        f"responde la pregunta de forma precisa y utilizando datos textuales exactos:
-
-"
+        f"responde la pregunta de forma precisa y utilizando datos textuales exactos: "
         f"Documentos disponibles:
 {indexed_text}
 
