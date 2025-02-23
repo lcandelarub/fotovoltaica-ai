@@ -18,7 +18,7 @@ knowledge_file = "knowledge.json"
 
 def download_pdfs_from_github():
     GITHUB_REPO = "https://raw.githubusercontent.com/lcandelarub/fotovoltaica-ai/main/documents/"
-    pdf_files = ["documento1.pdf", "documento2.pdf"]  # Lista de archivos en el repo
+    pdf_files = [file['name'] for file in requests.get('https://api.github.com/repos/lcandelarub/fotovoltaica-ai/contents/documents').json() if file['name'].endswith('.pdf')]  # Lista de archivos en el repo
     
     if not os.path.exists("documents"):
         os.makedirs("documents")
