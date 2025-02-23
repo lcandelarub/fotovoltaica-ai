@@ -57,13 +57,8 @@ if question:
     prompt = (
         f"Basado en los siguientes documentos sobre energía fotovoltaica, "
         f"responde la pregunta de forma precisa y utilizando datos textuales exactos: "
-        f"Documentos disponibles:
-{indexed_text}
-
-"
-        f"Pregunta: {question}
-
-"
+        f"Documentos disponibles:{indexed_text} "
+        f"Pregunta: {question}"
         f"Respuesta:"
     )
 
