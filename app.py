@@ -36,8 +36,10 @@ def process_and_store_documents():
     knowledge = {}
     for file in os.listdir("documents"):
         if file.endswith(".pdf"):
-            text = extract_text_from_pdf(os.path.join("documents", file))
-            knowledge[file] = text
+            paragraphs = extract_text_from_pdf(os.path.join("documents", file))
+            for i, paragraph in enumerate(paragraphs):
+                key = f"{file}_part_{i}"
+                knowledge[key] = paragraph.strip()
     
     with open(knowledge_file, "w") as f:
         json.dump(knowledge, f, indent=4)
@@ -47,8 +49,11 @@ def extract_text_from_pdf(pdf_path):
     with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
         for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
-    return text
+            text += page.extract_text() + "
+"
+    return text.split("
+
+")  # Dividir el texto en párrafos
 
 # --- DESCARGAR Y PROCESAR DOCUMENTOS AL INICIAR ---
 download_pdfs_from_github()
