@@ -1,4 +1,4 @@
-import streamlit as st
+import chromadb
 import PyPDF2
 import os
 import json
@@ -8,8 +8,7 @@ from openai import OpenAI
 # --- CONFIGURAR LA API KEY DESDE SECRETS ---
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
-    st.error("❌ ERROR: No se encontró la API Key de OpenAI. Configúrala en Streamlit Secrets.")
-    st.stop()
+    raise RuntimeError("❌ ERROR: No se encontró la API Key de OpenAI. Configúrala en el entorno de ejecución.")
 
 client = OpenAI(api_key=api_key)
 
@@ -30,26 +29,27 @@ def download_pdfs_from_github():
             with open(os.path.join("documents", pdf), "wb") as f:
                 f.write(response.content)
         else:
-            st.warning(f"No se pudo descargar {pdf} desde GitHub.")
+            print(f"⚠️ Advertencia: No se pudo descargar {pdf} desde GitHub.")
 
 def process_and_store_documents():
-    knowledge = {}
+    chroma_client = chromadb.PersistentClient(path="chroma_db")
+    collection = chroma_client.get_or_create_collection("documents")
+    
     for file in os.listdir("documents"):
         if file.endswith(".pdf"):
             paragraphs = extract_text_from_pdf(os.path.join("documents", file))
             for i, paragraph in enumerate(paragraphs):
-                key = f"{file}_part_{i}"
-                knowledge[key] = paragraph.strip()
-    
-    with open(knowledge_file, "w") as f:
-        json.dump(knowledge, f, indent=4)
+                doc_id = f"{file}_part_{i}"
+                collection.add(documents=[paragraph.strip()], ids=[doc_id])
 
 def extract_text_from_pdf(pdf_path):
     text = ""
     with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
         for page in pdf_reader.pages:
-            text += page.extract_text() + "\n"
+            extracted_text = page.extract_text()
+            if extracted_text:
+                text += extracted_text + "\n"
     return text.split("\n\n")  # Dividir el texto en párrafos
 
 # --- DESCARGAR Y PROCESAR DOCUMENTOS AL INICIAR ---
@@ -57,15 +57,16 @@ download_pdfs_from_github()
 process_and_store_documents()
 
 # --- INTERFAZ DE PREGUNTAS ---
-st.title("🔆 Chat de Fotovoltaica AI")
-st.write("Haz preguntas y obtén respuestas basadas en documentos pre-cargados.")
+print("🔆 Chat de Fotovoltaica AI")
+print("Haz preguntas y obtén respuestas basadas en documentos pre-cargados.")
 
-query = st.text_input("🔍 Escribe tu pregunta sobre fotovoltaica:")
+query = input("🔍 Escribe tu pregunta sobre fotovoltaica: ")
 if query:
-    with open(knowledge_file, "r") as f:
-        knowledge = json.load(f)
+    chroma_client = chromadb.PersistentClient(path="chroma_db")
+    collection = chroma_client.get_or_create_collection("documents")
+    results = collection.query(query_texts=[query], n_results=5)
+    retrieved_text = "\n\n".join([doc for doc in results['documents'][0]])
     
-    combined_text = "\n\n".join(knowledge.values())
     prompt = f"""
     Basado en el siguiente conocimiento almacenado sobre energía solar fotovoltaica,
     responde la pregunta de forma clara, estructurada y precisa.
@@ -73,7 +74,7 @@ if query:
     Pregunta: {query}
     
     Conocimiento disponible:
-    {combined_text[:2000]}
+    {retrieved_text[:2000]}
     
     Respuesta:
     """
@@ -89,9 +90,9 @@ if query:
         
         generated_response = response.choices[0].message.content.strip()
         if generated_response:
-            st.subheader("💡 Respuesta generada por IA:")
-            st.write(generated_response)
+            print("💡 Respuesta generada por IA:")
+            print(generated_response)
         else:
-            st.warning("No lo sé.")
+            print("⚠️ No lo sé.")
     except Exception as e:
-        st.error(f"❌ ERROR inesperado: {str(e)}")
+        print(f"❌ ERROR inesperado: {str(e)}")
