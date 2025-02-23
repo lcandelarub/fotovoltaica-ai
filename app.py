@@ -49,11 +49,11 @@ def extract_text_from_pdf(pdf_path):
     with open(pdf_path, "rb") as pdf_file:
         pdf_reader = PyPDF2.PdfReader(pdf_file)
         for page in pdf_reader.pages:
-            text += page.extract_text() + "
-"
+            text += page.extract_text() + ""
     return text.split("
+")  
 
-")  # Dividir el texto en párrafos
+# Dividir el texto en párrafos
 
 # --- DESCARGAR Y PROCESAR DOCUMENTOS AL INICIAR ---
 download_pdfs_from_github()
