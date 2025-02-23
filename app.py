@@ -65,17 +65,23 @@ if query:
     with open(knowledge_file, "r") as f:
         knowledge = json.load(f)
     
-    combined_text = "\n\n".join(knowledge.values())
+    relevant_fragments = [text for key, text in knowledge.items() if query.lower() in text.lower()]
+    combined_text = "\n\n".join(relevant_fragments[:5])  # Limitar a 5 fragmentos relevantes
     prompt = f"""
-    Basado en el siguiente conocimiento almacenado sobre energía solar fotovoltaica,
-    responde la pregunta de forma clara, estructurada y precisa.
-    
-    Pregunta: {query}
-    
-    Conocimiento disponible:
-    {combined_text[:2000]}
-    
-    Respuesta:
+    Eres un asistente experto en energía solar fotovoltaica. Usa la siguiente información almacenada en documentos técnicos para responder a la pregunta del usuario.
+
+    ### Pregunta del usuario:
+    {query}
+
+    ### Información relevante encontrada:
+    {combined_text}
+
+    ### Instrucciones para responder:
+    - Si encuentras información útil, responde de forma estructurada y con detalles técnicos.
+    - Si no encuentras información relevante en los documentos, responde con 'No lo sé'.
+    - No inventes información que no esté en los documentos.
+
+    ### Respuesta esperada:
     """
     
     try:
